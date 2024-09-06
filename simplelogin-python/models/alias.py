@@ -1,7 +1,11 @@
-import settings
+from dataclasses import dataclass
 
+@dataclass
+class Alias:
+    id: int
+    email: str
+    pinned: bool
 
-class SimpleLoginAlias:
     def __init__(self, alias_data):
         self.creation_date = alias_data.get("creation_date")
         self.creation_timestamp = alias_data.get("creation_timestamp")
@@ -19,22 +23,3 @@ class SimpleLoginAlias:
         self.note = alias_data.get("note")
         self.pinned = alias_data.get("pinned")
         self.support_pgp = alias_data.get("support_pgp")
-
-
-# class SimpleLoginAPI:
-#     base_url: str = settings.BASE_URL
-#
-#     def __init__(self, url: str, method: str, slug: str):
-#         self.url = f"{self.base_url}{url}"
-#         self.method = method
-#         self.slug = slug
-#
-#     def make_request(self, *args, **kwargs):
-#         response = getattr(requests, self.method)(
-#             *args,
-#             **kwargs
-#         )
-#         try:
-#             response.raise_for_status()
-#         except requests.HHTPError:
-#             raise SimpleLoginError
