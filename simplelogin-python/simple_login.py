@@ -1,8 +1,10 @@
+from typing import Annotated
 import typer
 import utils.connector as connector
 import settings
 import warnings
 from services.aliases_service import AliasesService
+from utils.output import pretty_print_aliases, print_alias, print_aliases
 
 app = typer.Typer()
 
@@ -10,26 +12,47 @@ if settings.VERIFY_SSL == False:
     warnings.filterwarnings('ignore')
 
 @app.command()
-def hello(name: str):
-    print(f"Hello {name}")
-
-
-@app.command()
-def rawlist():
-    print(f"Listing all aliases")
-    #print(settings.TOKEN) 
-    list = connector.get_aliases_from_sl(settings.TOKEN, 0)
-    print(list)
-
-
-@app.command()
-def list(all: bool = False):
+def list(verbose: Annotated[
+        bool,
+        typer.Option(
+            help="Display aliases properties in a table",
+        )] = False):
     print(f"Listing all aliases")
     service = AliasesService(settings.TOKEN)
-    if all:
-        service.pretty_print_aliases(service.aliases)
+    if verbose:
+        pretty_print_aliases(service.aliases)
     else:
-        service.print_aliases(service.aliases)
+        print_aliases(service.aliases)
+
+@app.command()
+def create():
+    print(f"Creating a new random aliases")
+    service = AliasesService(settings.TOKEN)
+    alias = service.new_random_alias()
+    print_alias(alias)
+
+@app.command()
+def delete(id: Annotated[
+        int,
+        typer.Argument(
+            help="The id of the alias to delete",
+        )]):
+    print(f"Deleting alias #{id}")
+    service = AliasesService(settings.TOKEN)
+    alias = service.get_alias(id)
+    if alias == None:
+        print(f"Alias #{id} not found")
+        return
+    
+    if alias.pinned:
+        print(f"{alias.email} is pinned and cannot be deleted")
+        return
+    
+    confirm = typer.prompt(f"Do you really want to delete {alias.email} ? (y/n)")
+
+    if confirm.lower() == "y":
+        service.remove_alias(id)
+        print(f"{alias.email} deleted!")
 
 if __name__ == "__main__":
     app()

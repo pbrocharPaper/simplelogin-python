@@ -42,6 +42,16 @@ def get_aliases_from_sl(token: str, page_id: int):
     response.raise_for_status()
     return response.json().get("aliases")
 
+def get_alias_from_sl(token: str, id: int):
+    response = requests.get(
+        url=f"{BASE_URL}/api/aliases/{id}",
+        headers={"Authentication": token},
+        verify=VERIFY_SSL
+    )
+    response.raise_for_status()
+    return response.json()
+
+
 
 def new_random_from_sl(token: str, hostname: str | None = None, mode: str = "word"):
     response = requests.post(
