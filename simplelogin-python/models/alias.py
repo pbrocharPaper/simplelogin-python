@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import  List
+from typing import  List, Optional
 from models.mail_box import MailBox
 
 @dataclass
@@ -21,4 +21,5 @@ class Alias:
     nb_reply: int
     note: str
     support_pgp: bool
+    alias: Optional[str] = None
 

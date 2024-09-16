@@ -1,5 +1,7 @@
 from typing import Annotated
 import typer
+from models.simple_login_error import SimpleLoginError
+from utils.authentified import authentified
 import utils.connector as connector
 import settings
 import warnings
@@ -7,7 +9,7 @@ from services.aliases_service import AliasesService
 from utils.environment import get_token, save_token
 from utils.output import pretty_print_aliases, print_alias, print_aliases
 
-app = typer.Typer()
+app = typer.Typer(add_completion=False)
 
 if settings.VERIFY_SSL == False:
     warnings.filterwarnings('ignore')
@@ -23,6 +25,7 @@ def set_token(token: Annotated[
     print("Token saved!")
 
 @app.command()
+@authentified
 def list(verbose: Annotated[
         bool,
         typer.Option(
@@ -36,13 +39,19 @@ def list(verbose: Annotated[
         print_aliases(service.aliases)
 
 @app.command()
+@authentified
 def create():
     print(f"Creating a new random alias")
     service = AliasesService(get_token())
-    alias = service.new_random_alias()
+    try:
+        alias = service.new_random_alias()
+    except SimpleLoginError as error:
+        print(error)
+        return
     print_alias(alias)
 
 @app.command()
+@authentified
 def delete(id: Annotated[
         int,
         typer.Argument(

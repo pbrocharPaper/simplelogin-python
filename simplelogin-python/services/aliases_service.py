@@ -50,7 +50,7 @@ class AliasesService:
         except SimpleLoginError:
             raise
         else:
-            return Alias(alias)
+            return Alias(**alias)
 
     def remove_alias(self, alias_id: int):
         try:
