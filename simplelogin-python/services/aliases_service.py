@@ -1,18 +1,18 @@
-from simplelogin.models import SimpleLoginAlias
-from simplelogin.connector import new_random_from_sl, remove_alias_from_sl, login_to_sl, get_aliases_from_sl, \
+from models.alias import Alias
+from utils.connector import get_alias_from_sl, new_random_from_sl, remove_alias_from_sl, login_to_sl, get_aliases_from_sl, \
     async_get_range_pages, get_cookie_token
-from simplelogin.exceptions import SimpleLoginError
-from simplelogin import settings
+from models.simple_login_error import SimpleLoginError
+import settings
 import asyncio
 
-class SimpleLogin:
+class AliasesService:
     def __init__(self, token: str | None = None):
         self.token = token
         self._aliases = None
 
     @property
     def aliases(self):
-        self._aliases = [SimpleLoginAlias(alias) for alias in get_aliases_from_sl(self.token, 0)]
+        self._aliases = [Alias(**alias) for alias in get_aliases_from_sl(self.token, 0)]
         return self._aliases
 
     def async_get_aliases(self, max_page: int = 1, from_page: int = 0):
@@ -20,7 +20,7 @@ class SimpleLogin:
         loop = asyncio.get_event_loop()
         pages = loop.run_until_complete(async_get_range_pages(self.token, max_page, from_page))
         for page in pages:
-            aliases.extend(SimpleLoginAlias(alias) for alias in page)
+            aliases.extend(Alias(**alias) for alias in page)
         return aliases
 
     def get_aliases(self, max_page: int = 1, from_page: int = 0):
@@ -30,12 +30,19 @@ class SimpleLogin:
             if alias_count == 0:
                 break
             else:
-                aliases = [SimpleLoginAlias(alias) for alias in raw_aliases]
+                aliases = [Alias(**alias) for alias in raw_aliases]
                 yield aliases
-            aliases.extend(SimpleLoginAlias(alias) for alias in raw_aliases)
+            aliases.extend(Alias(**alias) for alias in raw_aliases)
             if alias_count < 20:
                 break
         return aliases
+    
+    def get_alias(self, id: int):
+        try:
+            alias = get_alias_from_sl(self.token, id)
+            return Alias(**alias)
+        except:
+            return None
 
     def new_random_alias(self, hostname: str | None = None, mode: str = "word"):
         try:
@@ -43,7 +50,7 @@ class SimpleLogin:
         except SimpleLoginError:
             raise
         else:
-            return SimpleLoginAlias(alias)
+            return Alias(**alias)
 
     def remove_alias(self, alias_id: int):
         try:

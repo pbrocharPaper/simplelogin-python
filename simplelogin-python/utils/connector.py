@@ -1,16 +1,18 @@
 import asyncio
-
-from simplelogin.settings import BASE_URL
-from simplelogin.exceptions import SimpleLoginError
 import requests
 import aiohttp
+
+from settings import BASE_URL, VERIFY_SSL
+from models.simple_login_error import SimpleLoginError
+
 
 
 async def async_get_aliases_from_sl(session, token: str, page_id: int):
     async with session.get(
         url=f"{BASE_URL}/api/v2/aliases",
         headers={"Authentication": token},
-        params={"page_id": page_id}
+        params={"page_id": page_id},
+        verify=VERIFY_SSL
     ) as response:
         return await response.json()
 
@@ -35,9 +37,20 @@ def get_aliases_from_sl(token: str, page_id: int):
         url=f"{BASE_URL}/api/v2/aliases",
         headers={"Authentication": token},
         params={"page_id": page_id},
+        verify=VERIFY_SSL
     )
     response.raise_for_status()
     return response.json().get("aliases")
+
+def get_alias_from_sl(token: str, id: int):
+    response = requests.get(
+        url=f"{BASE_URL}/api/aliases/{id}",
+        headers={"Authentication": token},
+        verify=VERIFY_SSL
+    )
+    response.raise_for_status()
+    return response.json()
+
 
 
 def new_random_from_sl(token: str, hostname: str | None = None, mode: str = "word"):
@@ -45,6 +58,7 @@ def new_random_from_sl(token: str, hostname: str | None = None, mode: str = "wor
         url=f"{BASE_URL}/api/alias/random/new",
         headers={"Authentication": token},
         params={"hostname": hostname, "mode": mode},
+        verify=VERIFY_SSL
     )
     try:
         response.raise_for_status()
@@ -57,6 +71,7 @@ def remove_alias_from_sl(token: str, alias_id: int):
     response = requests.delete(
         url=f"{BASE_URL}/api/aliases/{alias_id}",
         headers={"Authentication": token},
+        verify=VERIFY_SSL
     )
     try:
         response.raise_for_status()
@@ -72,7 +87,8 @@ def login_to_sl(email: str, password: str, device: str | None = None):
             "email": email,
             "password": password,
             "device": device,
-        }
+        },
+        verify=VERIFY_SSL
     )
     try:
         response.raise_for_status()
@@ -84,7 +100,8 @@ def login_to_sl(email: str, password: str, device: str | None = None):
 def get_cookie_token(token: str):
     response = requests.get(
         url=f"{BASE_URL}/api/user/cookie_token",
-        headers={"Authentication": token}
+        headers={"Authentication": token},
+        verify=VERIFY_SSL
     )
     response.raise_for_status()
     return response
